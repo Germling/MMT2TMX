@@ -1,56 +1,41 @@
-#This is a PY  file with a script to translate a source text in TXT format using the ModernMT API and then save the results to a TMX file that can be read by most professional translation tools
+#This script translates a TXT file using the machine translation engine ModernMT and writes the output directly to a TMX file. 
+#This allows you to pretranslate texts using ModernMT and directly load them into a CAT tool.
+#This allows you to use ModernMT with CAT tools that don't offer an integration for this engine.
+#It requires that you get your own ModernMT API subscription at www.modernmt.com
 
-#!/usr/bin/env python
-# coding: utf-8
 
 import requests
-import csv
 import json
 import modernmt
 import pandas as pd
 from modernmt import ModernMT
+import xml.etree.ElementTree as ET
+import xml.dom.minidom
+import pandas as pd
 
 # Define API key and file path
-api_key = "YOUR_API_KEY"
-file_path = r"PATH_TO_YOUR_SOURCE_FILE"
-csv_file_path = r"PATH_TO_YOUR_CSV_FILE"
+api_key = "YOUR_KEY"
+file_path = r"SOURCE_FILE_PATH"
 mmt = ModernMT(api_key)
+
+
+# Function to clean text (if needed)
+def clean_text(text):
+    return text.strip().strip('"').rstrip(';')
 
 # Read source file contents
 with open(file_path, 'r') as file:
     file_contents = file.read()
 
 # Convert source text into Python array
-text_lines = [row for row in file_contents.split('\n') if row.strip()]
-
-print(text_lines)
+text_lines = [clean_text(row) for row in file_contents.split('\n') if row.strip()]
 
 # Translate source text
 translation = mmt.translate("en", "de", file_contents)
-
 translation_raw = translation.translation
 
 # Convert translation into array
-translated_rows = [row for row in translation_raw.split('\n') if row.strip()]
-
-print(translated_rows)
-
-# Convert array into Pandas dataframe
-df = pd.DataFrame({'en-en': text_lines, 'de-de':translated_rows})
-print(df)
-
-def clean_text(text):
-    # Strip leading and trailing whitespace, then strip surrounding quotes, then strip trailing semicolon
-    return text.strip().strip('"').rstrip(';')
-
-# Convert dataframe to CSV file
-for column in df.columns:
-    df[column] = df[column].apply(clean_text)
-
-df.to_csv('translated_texts.csv', sep=';', index=False, encoding='utf-8-sig')
-
-import xml.etree.ElementTree as ET
-import xml.dom.minidom
+translated_rows = [clean_text(row) for row in translation_raw.split('\n') if row.strip()]
 
 # Create the root element of the TMX file
 root = ET.Element('tmx', version='1.4')
@@ -58,19 +43,19 @@ root = ET.Element('tmx', version='1.4')
 # Create the body of the TMX file
 body = ET.SubElement(root, 'body')
 
-# Iterate over the DataFrame rows and add them to the TMX body
-for index, row in df.iterrows():
+# Iterate over the text lines and their translations
+for source, target in zip(text_lines, translated_rows):
     # Create a translation unit
     tu = ET.SubElement(body, 'tu')
 
     # Create translation elements for each language
     tuv_en = ET.SubElement(tu, 'tuv', lang='en-en')
     seg_en = ET.SubElement(tuv_en, 'seg')
-    seg_en.text = row['en-en']
+    seg_en.text = source
 
     tuv_de = ET.SubElement(tu, 'tuv', lang='de-de')
     seg_de = ET.SubElement(tuv_de, 'seg')
-    seg_de.text = row['de-de']
+    seg_de.text = target
 
 # Convert the XML tree to a string
 tmx_data = ET.tostring(root, encoding='unicode')
