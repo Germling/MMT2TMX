@@ -13,7 +13,7 @@ import xml.etree.ElementTree as ET
 import xml.dom.minidom
 import pandas as pd
 
-# Define API key and file path
+# Define API key and file path - replace with your own values!
 api_key = "YOUR_KEY"
 file_path = r"SOURCE_FILE_PATH"
 mmt = ModernMT(api_key)
