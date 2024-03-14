@@ -5,7 +5,6 @@
 
 
 # import openAI
-st.title('Scope Item Generator')
 import pandas
 import sys
 import re
@@ -15,6 +14,7 @@ import numpy as np
 
 
 # In[2]:
+st.title('Scope Item Generator')
 
 
 #The function reads scope items from user input
