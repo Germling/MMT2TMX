@@ -14,8 +14,6 @@ import numpy as np
 
 
 # In[2]:
-st.title('Scope Item Generator')
-
 
 #The function reads scope items from user input
 def extract_scope_items_from_input():
